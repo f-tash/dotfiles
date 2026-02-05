@@ -1,0 +1,19 @@
+# Load common environment (if not already loaded)
+[[ -z "$MY_ENV_LOADED" ]] && source ~/.config/shell/env.sh
+export MY_ENV_LOADED=1
+
+# Completion
+autoload -Uz compinit
+compinit
+
+# sheldon (plugin manager)
+eval "$(sheldon source)"
+
+# mise (version manager)
+eval "$(mise activate zsh)"
+
+# uv (python)
+eval "$(uv generate-shell-completion zsh)"
+
+# Load machine-specific settings
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local

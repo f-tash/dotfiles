@@ -1,0 +1,7 @@
+README.md
+
+{{- if ne .chezmoi.os "darwin" }}
+# macOS only (ignore on Linux)
+.Brewfile
+.config/karabiner
+{{- end }}

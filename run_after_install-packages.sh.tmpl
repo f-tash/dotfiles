@@ -1,0 +1,11 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Install Homebrew packages (macOS only)
+
+if command -v brew &> /dev/null; then
+    echo "Installing Homebrew packages..."
+    brew bundle --file=~/.Brewfile
+else
+    echo "Homebrew not found"
+fi
+{{- end }}

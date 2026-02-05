@@ -1,0 +1,18 @@
+{{- if eq .chezmoi.os "darwin" -}}
+# dotfiles Brewfile (macOS only)
+# Install: brew bundle --file=~/.Brewfile
+
+brew "chezmoi"
+brew "neovim"
+brew "zellij"
+brew "gh"
+brew "sheldon"
+brew "mise"
+brew "uv"
+brew "rustup"
+
+cask "google-chrome"
+cask "rectangle"
+cask "karabiner-elements"
+cask "1password-cli"
+{{- end }}
