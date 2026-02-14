@@ -53,7 +53,11 @@ Brewfileで以下を管理:
 
 **Formula:** chezmoi, neovim, zellij, gh, sheldon, mise, uv, rustup
 
-**Cask:** google-chrome, rectangle, karabiner-elements, 1password-cli
+**Cask:** google-chrome, rectangle, karabiner-elements, 1password-cli*, tailscale*
+
+*`machine_type = "private"` のみ
+
+`chezmoi init` 時に `machine_type`（private/work）を選択。privateでは1Password CLIとTailscaleが追加される。
 
 パッケージ追加時は`.Brewfile`を編集してcommit。
 

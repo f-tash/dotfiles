@@ -14,5 +14,8 @@ brew "rustup"
 cask "google-chrome"
 cask "rectangle"
 cask "karabiner-elements"
+{{- if eq .machine_type "private" }}
 cask "1password-cli"
+cask "tailscale"
+{{- end }}
 {{- end }}
