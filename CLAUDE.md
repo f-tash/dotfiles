@@ -47,6 +47,7 @@ Base is upstream `nvim-lua/kickstart.nvim` (single-file `init.lua`). It uses Neo
 
 Customizations added on top of kickstart:
 - **`snacks.nvim`** (folke/snacks.nvim) for file explorer, picker, and lazygit integration. Keymaps under `<leader>e`, `<leader>ff`/`fg`/`fr`/`fb`, `<leader>gg`. See SECTION 11.
+- **`noice.nvim`** (folke/noice.nvim, dep `MunifTanjim/nui.nvim`) renders the `:` command-line as a centered floating popup. Only cmdline/popupmenu are enabled; messages stay in the default area.
 - **`pkgs.tree-sitter`** in `home.packages` — required by nvim-treesitter `main` branch to build parsers.
 - **`pkgs.lazygit`** in `home.packages` — invoked via `Snacks.lazygit()`.
 

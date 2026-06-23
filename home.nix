@@ -17,6 +17,11 @@
   # into the same dir, so leave the rest of ~/.config/nvim writable.
   xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
 
+  # Karabiner-Elements config. Note: editing rules via the GUI rewrites
+  # this file, replacing the symlink — re-run apply.sh after GUI edits, or
+  # just edit karabiner.json in this repo directly.
+  xdg.configFile."karabiner/karabiner.json".source = ./karabiner.json;
+
   # home.file.".gitconfig".source = ./gitconfig;
   # home.file.".zshrc".source = ./zshrc;
 }

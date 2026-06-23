@@ -1004,5 +1004,25 @@ do
   vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = '[G]it: Lazy[g]it' })
 end
 
+-- [[ noice.nvim: floating command-line ]]
+-- Render the `:` command-line as a centered floating popup instead of the
+-- bottom message area. nui.nvim is a required dependency.
+do
+  vim.pack.add {
+    gh 'MunifTanjim/nui.nvim',
+    gh 'folke/noice.nvim',
+  }
+
+  require('noice').setup {
+    -- Floating popup for the command-line and its completion menu.
+    cmdline = { enabled = true, view = 'cmdline_popup' },
+    popupmenu = { enabled = true },
+    -- Leave normal messages in the default location; only the cmdline floats.
+    messages = { enabled = false },
+    notify = { enabled = false },
+    lsp = { progress = { enabled = false } },
+  }
+end
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
