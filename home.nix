@@ -11,6 +11,11 @@
     pkgs.tree-sitter
     # Git TUI, opened from nvim via Snacks.lazygit().
     pkgs.lazygit
+    # Toolchains Mason needs to install/run language servers:
+    #   nodejs -> ts_ls (typescript-language-server, via npm)
+    #   go     -> gopls (via `go install`)
+    pkgs.nodejs
+    pkgs.go
   ];
 
   # Link the nvim init.lua only — lazy.nvim writes lazy-lock.json etc.

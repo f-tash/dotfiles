@@ -696,7 +696,7 @@ do
   ---@type table<string, vim.lsp.Config>
   local servers = {
     -- clangd = {},
-    -- gopls = {},
+    gopls = {}, -- Go
     -- pyright = {},
     -- rust_analyzer = {},
     --
@@ -704,9 +704,7 @@ do
     --    https://github.com/pmizio/typescript-tools.nvim
     --
     -- But for many setups, the LSP (`ts_ls`) will work just fine
-    -- ts_ls = {},
-
-    stylua = {}, -- Used to format Lua code
+    ts_ls = {}, -- TypeScript / JavaScript
 
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
@@ -763,6 +761,7 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    'stylua', -- Used to format Lua code
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -890,6 +889,21 @@ do
 
     -- Shows a signature help window while you type arguments for a function
     signature = { enabled = true },
+
+    -- Fuzzy completion in the `:` command-line (and `/`, `?` search).
+    -- blink ships cmdline support; here we make the menu pop up automatically
+    -- as you type instead of only on <Tab>.
+    cmdline = {
+      keymap = { preset = 'cmdline' },
+      completion = {
+        menu = { auto_show = true },
+        -- preselect = false so typing isn't hijacked (nothing selected until
+        -- you press <Tab>). auto_insert = true so that selecting with <Tab>
+        -- writes the candidate into the command-line, letting <CR> run the
+        -- completed command instead of the original text.
+        list = { selection = { preselect = false, auto_insert = true } },
+      },
+    },
   }
 end
 
@@ -1048,7 +1062,9 @@ do
   require('noice').setup {
     -- Floating popup for the command-line and its completion menu.
     cmdline = { enabled = true, view = 'cmdline_popup' },
-    popupmenu = { enabled = true },
+    -- Let blink.cmp render the command-line completion menu instead, so we
+    -- don't get two overlapping popups.
+    popupmenu = { enabled = false },
     -- Leave normal messages in the default location; only the cmdline floats.
     messages = { enabled = false },
     notify = { enabled = false },
