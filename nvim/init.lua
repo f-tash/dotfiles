@@ -988,6 +988,8 @@ do
   require('snacks').setup {
     explorer = { enabled = true },
     picker = { enabled = true },
+    -- Smooth scrolling for <C-d>/<C-u>/<C-f>/<C-b>/gg/G etc.
+    scroll = { enabled = true },
   }
 
   -- File explorer (sidebar)
@@ -1002,6 +1004,20 @@ do
 
   -- Lazygit in a floating terminal (requires the `lazygit` binary on PATH).
   vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = '[G]it: Lazy[g]it' })
+end
+
+-- [[ smear-cursor.nvim: animated (smearing) cursor movement ]]
+-- Makes the cursor flow/trail to its new position instead of jumping.
+do
+  vim.pack.add { gh 'sphamba/smear-cursor.nvim' }
+
+  require('smear_cursor').setup {
+    -- Animate the cursor even when moving within the same buffer line.
+    smear_between_buffers = true,
+    smear_between_neighbor_lines = true,
+    -- Animate during <C-d>/<C-u> and other vertical scrolls.
+    scroll_buffer_space = true,
+  }
 end
 
 -- [[ noice.nvim: floating command-line ]]
