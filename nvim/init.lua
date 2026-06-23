@@ -185,6 +185,9 @@ do
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+  -- Exit insert mode with `jj`
+  vim.keymap.set('i', 'jj', '<Esc>', { desc = 'Exit insert mode' })
+
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
   vim.diagnostic.config {
@@ -990,6 +993,8 @@ do
     picker = { enabled = true },
     -- Smooth scrolling for <C-d>/<C-u>/<C-f>/<C-b>/gg/G etc.
     scroll = { enabled = true },
+    -- Indent guides + animated scope highlight.
+    indent = { enabled = true },
   }
 
   -- File explorer (sidebar)
@@ -1004,6 +1009,17 @@ do
 
   -- Lazygit in a floating terminal (requires the `lazygit` binary on PATH).
   vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = '[G]it: Lazy[g]it' })
+end
+
+-- [[ flash.nvim: fast on-screen jumps with labels ]]
+-- `s` + chars shows labels to jump anywhere on screen; also enhances f/t/F/T.
+do
+  vim.pack.add { gh 'folke/flash.nvim' }
+
+  require('flash').setup {}
+
+  vim.keymap.set({ 'n', 'x', 'o' }, 's', function() require('flash').jump() end, { desc = 'Flash jump' })
+  vim.keymap.set({ 'n', 'x', 'o' }, 'S', function() require('flash').treesitter() end, { desc = 'Flash Treesitter' })
 end
 
 -- [[ smear-cursor.nvim: animated (smearing) cursor movement ]]
