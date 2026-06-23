@@ -1,0 +1,5 @@
+# Copy this file to local.nix (gitignored) and set your macOS login username.
+# `whoami` will print it. local.nix keeps machine-specific values out of the public repo.
+{
+  username = "your-username";
+}

@@ -1,0 +1,11 @@
+{ pkgs, ... }:
+let
+  # Put the private repository URL here. Copy this file to private.nix to enable it.
+  # Note: private.nix is gitignored so the URL never lands in the public repo.
+  privateSrc = builtins.fetchGit {
+    url = "https://git.example.com/your-owner/your-private-repo.git";
+    ref = "main";
+    # rev = "<commit-hash>";  # Pin a commit for reproducibility.
+  };
+in
+  import "${privateSrc}/home.nix"
