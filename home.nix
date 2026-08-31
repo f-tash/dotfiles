@@ -16,6 +16,8 @@
     #   go     -> gopls (via `go install`)
     pkgs.nodejs
     pkgs.go
+    # Terminal emulator. Use ghostty-bin (prebuilt macOS app); pkgs.ghostty is Linux-only.
+    pkgs.ghostty-bin
   ];
 
   # Link the nvim init.lua only — lazy.nvim writes lazy-lock.json etc.
