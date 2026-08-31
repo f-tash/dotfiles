@@ -303,11 +303,6 @@ do
       local kind = ev.data.kind
       if kind ~= 'install' and kind ~= 'update' then return end
 
-      if name == 'telescope-fzf-native.nvim' and vim.fn.executable 'make' == 1 then
-        run_build(name, { 'make' }, ev.data.path)
-        return
-      end
-
       if name == 'LuaSnip' then
         if vim.fn.has 'win32' ~= 1 and vim.fn.executable 'make' == 1 then run_build(name, { 'make', 'install_jsregexp' }, ev.data.path) end
         return
@@ -384,13 +379,15 @@ do
   -- Change the name of the colorscheme plugin below, and then
   -- change the command under that to load whatever the name of that colorscheme is.
   --
-  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  -- If you want to see what colorschemes are already installed, run `:lua Snacks.picker.colorschemes()`.
   vim.pack.add { gh 'folke/tokyonight.nvim' }
   ---@diagnostic disable-next-line: missing-fields
   require('tokyonight').setup {
     styles = {
       comments = { italic = false }, -- Disable italics in comments
     },
+    -- Bold section text in the lualine theme below.
+    lualine_bold = true,
   }
 
   -- Load the colorscheme here.
@@ -435,157 +432,53 @@ do
   -- - sr)'  - [S]urround [R]eplace [)] [']
   require('mini.surround').setup()
 
-  -- Simple and easy statusline.
-  --  You could remove this setup call if you don't like it,
-  --  and try some other statusline plugin
-  local statusline = require 'mini.statusline'
-  -- Set `use_icons` to true if you have a Nerd Font
-  statusline.setup { use_icons = vim.g.have_nerd_font }
-
-  -- You can configure sections in the statusline by overriding their
-  -- default behavior. For example, here we set the section for
-  -- cursor location to LINE:COLUMN
-  ---@diagnostic disable-next-line: duplicate-set-field
-  statusline.section_location = function() return '%2l:%-2v' end
+  -- NOTE: mini.statusline is deliberately not enabled here; lualine below
+  -- renders the statusline instead.
 
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
 end
 
--- ============================================================
--- SECTION 5: SEARCH & NAVIGATION
--- Telescope setup, keymaps, LSP picker mappings
--- ============================================================
+-- [[ lualine.nvim: statusline ]]
+-- Replaces mini.statusline. globalstatus draws one statusline for the whole
+-- editor rather than one per split, which suits Herdr panes better.
 do
-  -- [[ Fuzzy Finder (files, lsp, etc) ]]
-  --
-  -- Telescope is a fuzzy finder that comes with a lot of different things that
-  -- it can fuzzy find! It's more than just a "file finder", it can search
-  -- many different aspects of Neovim, your workspace, LSP, and more!
-  --
-  -- There are lots of other alternative pickers (like snacks.picker, or fzf-lua)
-  -- so feel free to experiment and see what you like!
-  --
-  -- The easiest way to use Telescope, is to start by doing something like:
-  --  :Telescope help_tags
-  --
-  -- After running this command, a window will open up and you're able to
-  -- type in the prompt window. You'll see a list of `help_tags` options and
-  -- a corresponding preview of the help.
-  --
-  -- Two important keymaps to use while in Telescope are:
-  --  - Insert mode: <c-/>
-  --  - Normal mode: ?
-  --
-  -- This opens a window that shows you all of the keymaps for the current
-  -- Telescope picker. This is really useful to discover what Telescope can
-  -- do as well as how to actually do it!
+  vim.pack.add { gh 'nvim-lualine/lualine.nvim' }
 
-  ---@type (string|vim.pack.Spec)[]
-  local telescope_plugins = {
-    gh 'nvim-lua/plenary.nvim',
-    gh 'nvim-telescope/telescope.nvim',
-    gh 'nvim-telescope/telescope-ui-select.nvim',
-  }
-  if vim.fn.executable 'make' == 1 then table.insert(telescope_plugins, gh 'nvim-telescope/telescope-fzf-native.nvim') end
-
-  -- NOTE: You can install multiple plugins at once
-  vim.pack.add(telescope_plugins)
-
-  -- See `:help telescope` and `:help telescope.setup()`
-  require('telescope').setup {
-    -- You can put your default mappings / updates / etc. in here
-    --  All the info you're looking for is in `:help telescope.setup()`
-    --
-    -- defaults = {
-    --   mappings = {
-    --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-    --   },
-    -- },
-    -- pickers = {}
-    extensions = {
-      ['ui-select'] = { require('telescope.themes').get_dropdown() },
+  require('lualine').setup {
+    options = {
+      theme = 'tokyonight-night',
+      globalstatus = true,
+      component_separators = { left = '', right = '' },
+      section_separators = { left = '', right = '' },
+    },
+    sections = {
+      lualine_a = { 'mode' },
+      lualine_b = { 'branch', 'diff', 'diagnostics' },
+      lualine_c = { { 'filename', path = 1 } },
+      lualine_x = { 'encoding', 'fileformat', 'filetype' },
+      lualine_y = { 'progress' },
+      lualine_z = { 'location' },
     },
   }
-
-  -- Enable Telescope extensions if they are installed
-  pcall(require('telescope').load_extension, 'fzf')
-  pcall(require('telescope').load_extension, 'ui-select')
-
-  -- See `:help telescope.builtin`
-  local builtin = require 'telescope.builtin'
-  vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-  vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-  vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-  vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-  vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-  vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-  vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-  vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-  vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = '[S]earch [C]ommands' })
-  vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
-
-  -- Add Telescope-based LSP pickers when an LSP attaches to a buffer.
-  -- If you later switch picker plugins, this is where to update these mappings.
-  vim.api.nvim_create_autocmd('LspAttach', {
-    group = vim.api.nvim_create_augroup('telescope-lsp-attach', { clear = true }),
-    callback = function(event)
-      local buf = event.buf
-
-      -- Find references for the word under your cursor.
-      vim.keymap.set('n', 'grr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
-
-      -- Jump to the implementation of the word under your cursor.
-      -- Useful when your language has ways of declaring types without an actual implementation.
-      vim.keymap.set('n', 'gri', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
-
-      -- Jump to the definition of the word under your cursor.
-      -- This is where a variable was first declared, or where a function is defined, etc.
-      -- To jump back, press <C-t>.
-      vim.keymap.set('n', 'grd', builtin.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
-
-      -- Fuzzy find all the symbols in your current document.
-      -- Symbols are things like variables, functions, types, etc.
-      vim.keymap.set('n', 'gO', builtin.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
-
-      -- Fuzzy find all the symbols in your current workspace.
-      -- Similar to document symbols, except searches over your entire project.
-      vim.keymap.set('n', 'gW', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
-
-      -- Jump to the type of the word under your cursor.
-      -- Useful when you're not sure what type a variable is and you want to see
-      -- the definition of its *type*, not where it was *defined*.
-      vim.keymap.set('n', 'grt', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
-    end,
-  })
-
-  -- Override default behavior and theme when searching
-  vim.keymap.set('n', '<leader>/', function()
-    -- You can pass additional configuration to Telescope to change the theme, layout, etc.
-    builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-      winblend = 10,
-      previewer = false,
-    })
-  end, { desc = '[/] Fuzzily search in current buffer' })
-
-  -- It's also possible to pass additional configuration options.
-  --  See `:help telescope.builtin.live_grep()` for information about particular keys
-  vim.keymap.set(
-    'n',
-    '<leader>s/',
-    function()
-      builtin.live_grep {
-        grep_open_files = true,
-        prompt_title = 'Live Grep in Open Files',
-      }
-    end,
-    { desc = '[S]earch [/] in Open Files' }
-  )
-
-  -- Shortcut for searching your Neovim configuration files
-  vim.keymap.set('n', '<leader>sn', function() builtin.find_files { cwd = vim.fn.stdpath 'config', follow = true } end, { desc = '[S]earch [N]eovim files' })
 end
+
+-- [[ diffview.nvim: git diffs and file history ]]
+-- `:DiffviewOpen` for the working tree, `:DiffviewFileHistory %` for one file.
+-- plenary.nvim is a required dependency (it used to come in with Telescope).
+do
+  vim.pack.add {
+    gh 'nvim-lua/plenary.nvim',
+    gh 'sindrets/diffview.nvim',
+  }
+
+  require('diffview').setup {}
+end
+
+-- ============================================================
+-- SECTION 5: SEARCH & NAVIGATION
+-- ============================================================
+-- Pickers live in SECTION 11 (snacks.nvim). Telescope was removed.
 
 -- ============================================================
 -- SECTION 6: LSP
@@ -1002,9 +895,78 @@ end
 do
   vim.pack.add { gh 'folke/snacks.nvim' }
 
+  -- [[ Hiding test files ]]
+  -- Test files dominate fuzzy results in most repos, so they are hidden by
+  -- default and `T` (`<a-t>` while typing) toggles them back on.
+  --
+  -- files/grep/explorer take `exclude` globs natively and hand them straight
+  -- to fd/rg, which is both faster and correct for the explorer: filtering its
+  -- items after the fact leaves empty parent directories behind. Other sources
+  -- are filtered per item via `transform` instead. git_diff is left alone --
+  -- its items are diff lines, so dropping them by path would eat the hunks.
+  local TEST_GLOBS = { '*test*', '*Test*' }
+  local NATIVE_EXCLUDE = { files = true, grep = true, explorer = true, git_files = true, smart = true }
+  local NO_FILTER = { git_diff = true }
+
+  local function is_test_path(path)
+    if type(path) ~= 'string' then return false end
+    local name = vim.fs.basename(path)
+    return name:find('test', 1, true) ~= nil or name:find('Test', 1, true) ~= nil
+  end
+
+  -- Keep opts.exclude/opts.transform in step with opts.show_test.
+  local function sync_test_exclude(opts)
+    local source = opts.source or ''
+    if opts.show_test then
+      if NATIVE_EXCLUDE[source] then opts.exclude = nil end
+      if not NATIVE_EXCLUDE[source] and not NO_FILTER[source] then opts.transform = nil end
+      -- Nothing is hidden, so confirming a lone result is safe again.
+      opts.auto_confirm = nil
+      return
+    end
+
+    if NATIVE_EXCLUDE[source] then
+      opts.exclude = TEST_GLOBS
+    elseif not NO_FILTER[source] then
+      opts.transform = function(item)
+        if is_test_path(Snacks.picker.util.path(item) or item.file) then return false end
+      end
+    end
+    -- Something is hidden, so never auto-confirm: with one visible result,
+    -- `grn` and friends would jump straight into it without showing what was
+    -- filtered out.
+    opts.auto_confirm = false
+  end
+
   require('snacks').setup {
     explorer = { enabled = true },
-    picker = { enabled = true },
+    picker = {
+      enabled = true,
+      -- Start on the result list so j/k work the moment the picker opens.
+      focus = 'list',
+      -- Route vim.ui.select (code actions, etc.) through the picker too.
+      ui_select = true,
+      show_test = false,
+      toggles = { show_test = { icon = 'T', value = true } },
+      actions = {
+        toggle_test_filter = function(picker)
+          picker.opts.show_test = not picker.opts.show_test
+          sync_test_exclude(picker.opts)
+          picker.list:set_target()
+          picker:find { refresh = true }
+        end,
+      },
+      win = {
+        list = { keys = { ['T'] = 'toggle_test_filter' } },
+        input = { keys = { ['T'] = 'toggle_test_filter', ['<a-t>'] = { 'toggle_test_filter', mode = { 'n', 'i' } } } },
+      },
+      -- Runs inside Snacks.picker.config.get(), before the finder is built,
+      -- so the very first search is already filtered.
+      config = function(opts)
+        sync_test_exclude(opts)
+        return opts
+      end,
+    },
     -- Smooth scrolling for <C-d>/<C-u>/<C-f>/<C-b>/gg/G etc.
     scroll = { enabled = true },
     -- Indent guides + animated scope highlight.
@@ -1014,12 +976,42 @@ do
   -- File explorer (sidebar)
   vim.keymap.set('n', '<leader>e', function() Snacks.explorer() end, { desc = '[E]xplorer' })
 
-  -- Picker (fuzzy finder). Note: <leader>f is also bound to format above,
+  -- Kickstart-compatible <leader>s* pickers. These used to be Telescope.
+  vim.keymap.set('n', '<leader>sh', function() Snacks.picker.help() end, { desc = '[S]earch [H]elp' })
+  vim.keymap.set('n', '<leader>sk', function() Snacks.picker.keymaps() end, { desc = '[S]earch [K]eymaps' })
+  vim.keymap.set('n', '<leader>sf', function() Snacks.picker.files() end, { desc = '[S]earch [F]iles' })
+  vim.keymap.set('n', '<leader>ss', function() Snacks.picker.pickers() end, { desc = '[S]earch [S]elect Picker' })
+  vim.keymap.set({ 'n', 'x' }, '<leader>sw', function() Snacks.picker.grep_word() end, { desc = '[S]earch current [W]ord' })
+  vim.keymap.set('n', '<leader>sg', function() Snacks.picker.grep() end, { desc = '[S]earch by [G]rep' })
+  vim.keymap.set('n', '<leader>sd', function() Snacks.picker.diagnostics() end, { desc = '[S]earch [D]iagnostics' })
+  vim.keymap.set('n', '<leader>sr', function() Snacks.picker.resume() end, { desc = '[S]earch [R]esume' })
+  vim.keymap.set('n', '<leader>s.', function() Snacks.picker.recent() end, { desc = '[S]earch Recent Files ("." for repeat)' })
+  vim.keymap.set('n', '<leader>sc', function() Snacks.picker.commands() end, { desc = '[S]earch [C]ommands' })
+  vim.keymap.set('n', '<leader><leader>', function() Snacks.picker.buffers() end, { desc = '[ ] Find existing buffers' })
+  vim.keymap.set('n', '<leader>/', function() Snacks.picker.lines() end, { desc = '[/] Fuzzily search in current buffer' })
+  vim.keymap.set('n', '<leader>s/', function() Snacks.picker.grep_buffers() end, { desc = '[S]earch [/] in Open Files' })
+  vim.keymap.set(
+    'n',
+    '<leader>sn',
+    function() Snacks.picker.files { cwd = vim.fn.stdpath 'config', follow = true } end,
+    { desc = '[S]earch [N]eovim files' }
+  )
+
+  -- LazyVim-style <leader>f*. Note: <leader>f is also bound to format above,
   -- so <leader>ff will wait briefly for the second key.
   vim.keymap.set('n', '<leader>ff', function() Snacks.picker.files() end, { desc = '[F]ind [F]iles' })
   vim.keymap.set('n', '<leader>fg', function() Snacks.picker.grep() end, { desc = '[F]ind by [G]rep' })
   vim.keymap.set('n', '<leader>fr', function() Snacks.picker.recent() end, { desc = '[F]ind [R]ecent' })
   vim.keymap.set('n', '<leader>fb', function() Snacks.picker.buffers() end, { desc = '[F]ind [B]uffers' })
+
+  -- LSP pickers. Set globally rather than on LspAttach: the picker itself
+  -- reports when no server is attached, and global maps survive the buffer.
+  vim.keymap.set('n', 'grr', function() Snacks.picker.lsp_references() end, { desc = '[G]oto [R]eferences' })
+  vim.keymap.set('n', 'gri', function() Snacks.picker.lsp_implementations() end, { desc = '[G]oto [I]mplementation' })
+  vim.keymap.set('n', 'grd', function() Snacks.picker.lsp_definitions() end, { desc = '[G]oto [D]efinition' })
+  vim.keymap.set('n', 'grt', function() Snacks.picker.lsp_type_definitions() end, { desc = '[G]oto [T]ype Definition' })
+  vim.keymap.set('n', 'gO', function() Snacks.picker.lsp_symbols() end, { desc = 'Open Document Symbols' })
+  vim.keymap.set('n', 'gW', function() Snacks.picker.lsp_workspace_symbols() end, { desc = 'Open Workspace Symbols' })
 
   -- Lazygit in a floating terminal (requires the `lazygit` binary on PATH).
   vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = '[G]it: Lazy[g]it' })

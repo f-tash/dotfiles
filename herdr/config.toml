@@ -1,0 +1,28 @@
+# Herdr configuration. Only the keys below differ from the defaults;
+# everything else (theme / terminal / UI) is left at its built-in value.
+# Docs: https://herdr.dev
+
+[keys]
+# Prefix stays at the default ctrl+b. These are the direct (prefix-less)
+# bindings. ctrl+option is what Caps Lock produces via Karabiner, and
+# Karabiner identity-maps ctrl+option+hjkl so it reaches Herdr instead of
+# being rewritten to arrow keys.
+new_workspace = "ctrl+option+s"
+previous_workspace = "ctrl+option+'"
+next_workspace = "ctrl+option+;"
+previous_agent = "ctrl+option+."
+next_agent = "ctrl+option+,"
+new_tab = "ctrl+option+t"
+previous_tab = "ctrl+option+["
+next_tab = "ctrl+option+]"
+focus_pane_left = "ctrl+option+h"
+focus_pane_down = "ctrl+option+j"
+focus_pane_up = "ctrl+option+k"
+focus_pane_right = "ctrl+option+l"
+split_vertical = "ctrl+option+v"
+split_horizontal = "ctrl+option+b"
+close_pane = "ctrl+option+x"
+zoom = "ctrl+option+f"
+
+[experimental]
+pane_history = false

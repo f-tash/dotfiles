@@ -1,0 +1,15 @@
+# Login shells. On macOS this runs once per terminal window, and once per new
+# Herdr pane (Herdr starts login shells).
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# PATH and EDITOR shared with non-zsh shells.
+source ~/.config/shell/env.sh
+
+# Homebrew python before the mise shims, when it is installed.
+if [[ -d /opt/homebrew/opt/python@3.13 ]]; then
+  export PATH="/opt/homebrew/opt/python@3.13/libexec/bin:$PATH"
+fi
+
+# OrbStack (docker CLI). Silent when OrbStack is not installed.
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :
