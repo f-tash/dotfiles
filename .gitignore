@@ -2,3 +2,6 @@
 /local.nix
 /playground/
 .DS_Store
+
+/result
+/result-*
