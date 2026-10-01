@@ -18,7 +18,7 @@ Neovim の初回起動はプラグインやツールを取得し得ます。バ�
 
 `local.nix` がまだない場合だけ `cp local.nix.example local.nix` し、`username` を `id -un` の結果に合わせます。`private.nix` は必要な人だけ雛形をコピーし、内容を自分でレビューします。公開 repo に私有 URL を書きません。
 
-**`local.nix` / `private.nix` を `git add -f` しないでください。** `.gitignore` は既に追跡されたファイルには効きません。次のコマンドが何も表示しないことを確認します。
+**`local.nix` / `private.nix` を `git add -f` しないでください。** `.gitignore` は既に追跡されたファイルには効きません。`git ls-files` が何も表示せず、`git check-ignore` が両方のファイル名を表示することを確認します。
 
 ```sh
 git ls-files -- local.nix private.nix
@@ -50,7 +50,9 @@ printf 'Backup directory: %s\n' "$backup"
 ## 3. 適用しない検証
 
 ```sh
-sh -n apply.sh commit.sh push.sh
+for f in apply.sh commit.sh push.sh; do
+  sh -n "$f" || break
+done
 for f in shell/zprofile shell/zshrc shell/aliases.zsh shell/herdr.zsh; do
   zsh -n "$f" || break
 done

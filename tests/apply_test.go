@@ -94,14 +94,21 @@ if [ "$1" = eval ]; then
  esac
  exit 0
 fi
-[ "$1" = run ] && [ "$2" = --no-update-lock-file ]
+[ "$1" = run ]
+[ "$2" = --no-update-lock-file ]
 source=${3#path:}
 source=${source%#home-manager}
-[ "$4" = -- ] && [ "$5" = "$MODE" ] && [ "$6" = --flake ]
-[ "$7" = "path:$source#default" ] && [ "$8" = --impure ] && [ "$9" = --no-update-lock-file ]
+[ "$4" = -- ]
+[ "$5" = "$MODE" ]
+[ "$6" = --flake ]
+[ "$7" = "path:$source#default" ]
+[ "$8" = --impure ]
+[ "$9" = --no-update-lock-file ]
 [ "$(cat "$source/tracked file")" = working ]
 [ "$(cat "$source/new file")" = new ]
-[ -f "$source/local.nix" ] && [ ! -e "$source/untracked" ] && [ ! -e "$source/.git" ]
+[ -f "$source/local.nix" ]
+[ ! -e "$source/untracked" ]
+[ ! -e "$source/.git" ]
 if [ "$CASE" = no-private ]; then [ ! -e "$source/private.nix" ]; else [ -f "$source/private.nix" ]; fi
 if [ "$CASE" != staged-private ]; then
  [ -z "$(git ls-files local.nix private.nix)" ]
@@ -132,6 +139,11 @@ if [ "$CASE" = term ]; then kill -TERM "$PPID"; fi
 			if (runErr == nil) != wantSuccess {
 				t.Fatalf("success=%v, err=%v, output=%s", wantSuccess, runErr, out)
 			}
+			if wantSuccess {
+				if _, err := os.Stat(filepath.Join(root, "snapshot")); err != nil {
+					t.Fatal("Successful command did not reach the verified Nix invocation")
+				}
+			}
 			after, err := os.ReadFile(filepath.Join(repo, ".git/index"))
 			if err != nil {
 				t.Fatal(err)
@@ -153,6 +165,11 @@ if [ "$CASE" = term ]; then kill -TERM "$PPID"; fi
 			if scenario == "nix-failure" {
 				if e, ok := runErr.(*exec.ExitError); !ok || e.ExitCode() != 42 {
 					t.Fatalf("lost Nix exit status: %v", runErr)
+				}
+			}
+			if scenario == "term" {
+				if e, ok := runErr.(*exec.ExitError); !ok || e.ExitCode() != 143 {
+					t.Fatalf("lost TERM exit status: %v", runErr)
 				}
 			}
 		})
