@@ -40,6 +40,9 @@
         then [ ./private.nix ]
         else [ ];
     in {
+      # Use the same locked Home Manager for the CLI and the configuration.
+      packages.${system}.home-manager = home-manager.packages.${system}.home-manager;
+
       homeConfigurations.default = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         extraSpecialArgs = { inherit username; };

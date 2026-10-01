@@ -36,8 +36,8 @@
     pkgs.orbstack
   ];
 
-  # Link the nvim init.lua only — lazy.nvim writes lazy-lock.json etc.
-  # into the same dir, so leave the rest of ~/.config/nvim writable.
+  # Link only init.lua. Leave the rest of ~/.config/nvim writable for
+  # machine-local files; plugins are managed separately by vim.pack.
   xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
 
   # Herdr keybindings. The rest of ~/.config/herdr (sockets, logs, session

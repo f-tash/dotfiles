@@ -2,6 +2,9 @@
 
 Personal dotfiles managed with Nix home-manager (standalone, flakes-based).
 
+Start with README.md (Japanese reading order), docs/nix.md (mental model),
+docs/operations.md (build/apply/rollback), and docs/review.md (findings and tests).
+
 ## Layout
 
 ```
@@ -16,7 +19,7 @@ karabiner.json         Karabiner-Elements config.
 private.nix.example    Template for the optional private slot. Committed.
 private.nix            Optional private overlay. **gitignored**, never commit.
 commit.sh / push.sh    Tiny git helpers — `git add -A && git commit -m update`, `git push`.
-.gitignore             Excludes private.nix.
+.gitignore             Excludes local/private settings and Nix build result links.
 ```
 
 ## Applying changes
@@ -25,16 +28,20 @@ After editing `home.nix`, `nvim/init.lua`, or anything else linked from home.nix
 (`shell/*`, `herdr/config.toml`, `karabiner.json`):
 
 ```sh
-./apply.sh   # = nix run home-manager/master -- switch --flake .#default --impure
+./apply.sh build    # Build only; do not activate the home configuration.
+./apply.sh switch   # Apply after reviewing the build. Also the default mode.
 ```
 
-**New files must be `git add`-ed before applying.** Nix's git filter hides untracked
-files from the flake evaluator, so an unstaged new file fails the build with a
-missing-path error. (`apply.sh` already stages `local.nix` and `private.nix` for you,
-and restores git state on exit.)
+**New public files must be `git add`-ed before applying.** The script copies the
+working-tree contents of tracked files into a temporary directory and adds
+local.nix and optional private.nix there. It never stages either private file or
+changes the real Git index. local.nix is required; switch also verifies the host,
+username and home directory. The Home Manager CLI and modules use the same locked
+input. Lock updates are refused; update dependencies separately and review them.
 
-This rebuilds the home-manager generation and refreshes symlinks under `~/`.
-`nvim/init.lua` is linked to `~/.config/nvim/init.lua`; everything else in `~/.config/nvim/` (e.g. `lazy-lock.json`, plugin state) stays writable.
+Switch rebuilds the home-manager generation and refreshes symlinks under `~/`;
+build only creates the generation and a result link.
+`nvim/init.lua` is linked to `~/.config/nvim/init.lua`; everything else in `~/.config/nvim/` stays writable. Plugins are managed separately by vim.pack.
 
 ## Private overlay
 
@@ -49,6 +56,10 @@ privateModules =
 
 Without `private.nix`, the public modules apply on their own — no error, no degradation. To enable private settings on a machine, copy `private.nix.example` to `private.nix` and fill in the source.
 
+Gitignored does not mean secret storage: Nix can copy these files to its store.
+Do not put credentials in Nix source. The temporary snapshot avoids Git staging
+accidents; it does not make the store private or remove arbitrary activation effects.
+
 **Hard rule:** the private repository URL must never appear in any file committed to this repo. The example uses an obviously-fake `git.example.com/...` placeholder. Do not replace it with a plausible-looking URL even in comments; use `example.com` / `.example` TLDs only.
 
 ## Neovim
@@ -60,7 +71,7 @@ Customizations added on top of kickstart:
 - **Test files are hidden from pickers** by default; `T` (or `<a-t>` while typing) toggles them. files/grep/explorer use snacks' native `exclude` globs; other sources are filtered per item with `transform`; `git_diff` is left alone so diff hunks survive. Note the globs are `*test*`/`*Test*`, so a name like `latest.lua` is also hidden.
 - **`lualine.nvim`** replaces `mini.statusline` (`globalstatus = true`, tokyonight theme with `lualine_bold`).
 - **`diffview.nvim`** (+ `nvim-lua/plenary.nvim`, which used to arrive with Telescope) for `:DiffviewOpen` / `:DiffviewFileHistory`.
-- **`noice.nvim`** (folke/noice.nvim, dep `MunifTanjim/nui.nvim`) renders the `:` command-line as a centered floating popup. Only cmdline/popupmenu are enabled; messages stay in the default area.
+- **`noice.nvim`** (folke/noice.nvim, dep `MunifTanjim/nui.nvim`) renders the `:` command-line as a centered floating popup. Its popupmenu is disabled in favor of blink.cmp; messages stay in the default area.
 - **`pkgs.tree-sitter`** in `home.packages` — required by nvim-treesitter `main` branch to build parsers.
 - **`pkgs.lazygit`** in `home.packages` — invoked via `Snacks.lazygit()`.
 
@@ -102,7 +113,7 @@ There is currently no plugin lockfile in this repo (`lazy-lock.json` is not used
 
 ```sh
 # Apply current config
-./apply.sh   # = nix run home-manager/master -- switch --flake .#default
+./apply.sh switch
 
 # Update flake inputs (nixpkgs, home-manager)
 nix flake update
