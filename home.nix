@@ -19,6 +19,8 @@
     #   go     -> gopls (via `go install`)
     pkgs.nodejs
     pkgs.go
+    # Project tool versions.
+    pkgs.mise
     # Terminal emulator. Use ghostty-bin (prebuilt macOS app); pkgs.ghostty is Linux-only.
     pkgs.ghostty-bin
     # Terminal multiplexer for AI coding agents. https://herdr.dev
