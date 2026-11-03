@@ -98,6 +98,18 @@ Herdr pane navigation receive their respective bindings.
 There is currently no plugin lockfile in this repo (`lazy-lock.json` is not used because `vim.pack` manages versions internally; pin via `version = '...'` in the `vim.pack.add` call if reproducibility matters).
 
 
+## Cursor Cloud
+
+Cloud Agent VMs are Linux x86_64 with no systemd. `flake.nix` is pinned to `aarch64-darwin`, and Ghostty, OrbStack, and Karabiner do not apply there, so do not run `./apply.sh` on the VM. Nix is a single-user install with flakes enabled. On boot, `nvim/init.lua`, `nvim/lua/config`, and `nvim/lua/features` are linked into `~/.config/nvim`.
+
+```sh
+nvim --headless -c 'lua local _, c = require("features.git.logic").diff_summary("@@ -1 +1 @@\n-a\n+b"); assert(c == 2)' -c 'qa'
+nix eval --raw .#homeConfigurations.default.config.home.username
+zsh -n shell/zshrc shell/zprofile shell/aliases.zsh shell/herdr.zsh
+```
+
+`nix eval` uses the public flake. Without gitignored `local.nix` the username is `user`. Do not commit `private.nix`.
+
 ## Conventions
 
 - **Code comments are in English** (this file and conversation may be in Japanese, but anything inside `.nix`, `.lua`, `.sh`, etc. is English).
