@@ -4,9 +4,8 @@
 
 [keys]
 # Prefix stays at the default ctrl+b. These are the direct (prefix-less)
-# bindings. ctrl+option is what Caps Lock produces via Karabiner, and
-# Karabiner identity-maps ctrl+option+hjkl so it reaches Herdr instead of
-# being rewritten to arrow keys.
+# bindings. ctrl+option is what Caps Lock produces via Karabiner.
+# hjkl reaches Herdr unchanged.
 new_workspace = "ctrl+option+s"
 previous_workspace = "ctrl+option+'"
 next_workspace = "ctrl+option+;"

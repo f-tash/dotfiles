@@ -38,9 +38,10 @@
     pkgs.orbstack
   ];
 
-  # Link the nvim init.lua only — lazy.nvim writes lazy-lock.json etc.
-  # into the same dir, so leave the rest of ~/.config/nvim writable.
+  # Link config sources only; vim.pack's lockfile and plugin state stay writable.
   xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
+  xdg.configFile."nvim/lua/config".source = ./nvim/lua/config;
+  xdg.configFile."nvim/lua/features".source = ./nvim/lua/features;
 
   # Herdr keybindings. The rest of ~/.config/herdr (sockets, logs, session
   # state) is written by herdr itself, so link only config.toml.

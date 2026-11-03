@@ -325,7 +325,7 @@ local function gh(repo) return 'https://github.com/' .. repo end
 
 -- ============================================================
 -- SECTION 4: UI / CORE UX PLUGINS
--- guess-indent, gitsigns, which-key, colorscheme, todo-comments, mini modules
+-- guess-indent, which-key, colorscheme, todo-comments, mini modules
 -- ============================================================
 do
   -- [[ Installing and Configuring Plugins ]]
@@ -344,21 +344,6 @@ do
   vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
   require('guess-indent').setup {}
 
-  -- Here is a more advanced configuration example that passes options to `gitsigns.nvim`
-  --
-  -- See `:help gitsigns` to understand what each configuration key does.
-  -- Adds git related signs to the gutter, as well as utilities for managing changes
-  vim.pack.add { gh 'lewis6991/gitsigns.nvim' }
-  require('gitsigns').setup {
-    signs = {
-      add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-      change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-      delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-      topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-      changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
-    },
-  }
-
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
@@ -370,6 +355,7 @@ do
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
+      { '<leader>g', group = '[G]it' },
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
   }
@@ -463,22 +449,10 @@ do
   }
 end
 
--- [[ diffview.nvim: git diffs and file history ]]
--- `:DiffviewOpen` for the working tree, `:DiffviewFileHistory %` for one file.
--- plenary.nvim is a required dependency (it used to come in with Telescope).
-do
-  vim.pack.add {
-    gh 'nvim-lua/plenary.nvim',
-    gh 'sindrets/diffview.nvim',
-  }
-
-  require('diffview').setup {}
-end
-
 -- ============================================================
 -- SECTION 5: SEARCH & NAVIGATION
 -- ============================================================
--- Pickers live in SECTION 11 (snacks.nvim). Telescope was removed.
+-- Shared picker setup: config/plugins/snacks.lua; search actions: features/search/.
 
 -- ============================================================
 -- SECTION 6: LSP
@@ -890,132 +864,12 @@ do
 end
 
 -- ============================================================
--- SECTION 11: SNACKS (explorer + picker, LazyVim-style)
+-- SECTION 11: SHARED PICKER & FEATURES
+-- Configure the shared plugin before registering feature-specific mappings.
 -- ============================================================
-do
-  vim.pack.add { gh 'folke/snacks.nvim' }
-
-  -- [[ Hiding test files ]]
-  -- Test files dominate fuzzy results in most repos, so they are hidden by
-  -- default and `T` (`<a-t>` while typing) toggles them back on.
-  --
-  -- files/grep/explorer take `exclude` globs natively and hand them straight
-  -- to fd/rg, which is both faster and correct for the explorer: filtering its
-  -- items after the fact leaves empty parent directories behind. Other sources
-  -- are filtered per item via `transform` instead. git_diff is left alone --
-  -- its items are diff lines, so dropping them by path would eat the hunks.
-  local TEST_GLOBS = { '*test*', '*Test*' }
-  local NATIVE_EXCLUDE = { files = true, grep = true, explorer = true, git_files = true, smart = true }
-  local NO_FILTER = { git_diff = true }
-
-  local function is_test_path(path)
-    if type(path) ~= 'string' then return false end
-    local name = vim.fs.basename(path)
-    return name:find('test', 1, true) ~= nil or name:find('Test', 1, true) ~= nil
-  end
-
-  -- Keep opts.exclude/opts.transform in step with opts.show_test.
-  local function sync_test_exclude(opts)
-    local source = opts.source or ''
-    if opts.show_test then
-      if NATIVE_EXCLUDE[source] then opts.exclude = nil end
-      if not NATIVE_EXCLUDE[source] and not NO_FILTER[source] then opts.transform = nil end
-      -- Nothing is hidden, so confirming a lone result is safe again.
-      opts.auto_confirm = nil
-      return
-    end
-
-    if NATIVE_EXCLUDE[source] then
-      opts.exclude = TEST_GLOBS
-    elseif not NO_FILTER[source] then
-      opts.transform = function(item)
-        if is_test_path(Snacks.picker.util.path(item) or item.file) then return false end
-      end
-    end
-    -- Something is hidden, so never auto-confirm: with one visible result,
-    -- `grn` and friends would jump straight into it without showing what was
-    -- filtered out.
-    opts.auto_confirm = false
-  end
-
-  require('snacks').setup {
-    explorer = { enabled = true },
-    picker = {
-      enabled = true,
-      -- Start on the result list so j/k work the moment the picker opens.
-      focus = 'list',
-      -- Route vim.ui.select (code actions, etc.) through the picker too.
-      ui_select = true,
-      show_test = false,
-      toggles = { show_test = { icon = 'T', value = true } },
-      actions = {
-        toggle_test_filter = function(picker)
-          picker.opts.show_test = not picker.opts.show_test
-          sync_test_exclude(picker.opts)
-          picker.list:set_target()
-          picker:find { refresh = true }
-        end,
-      },
-      win = {
-        list = { keys = { ['T'] = 'toggle_test_filter' } },
-        input = { keys = { ['T'] = 'toggle_test_filter', ['<a-t>'] = { 'toggle_test_filter', mode = { 'n', 'i' } } } },
-      },
-      -- Runs inside Snacks.picker.config.get(), before the finder is built,
-      -- so the very first search is already filtered.
-      config = function(opts)
-        sync_test_exclude(opts)
-        return opts
-      end,
-    },
-    -- Smooth scrolling for <C-d>/<C-u>/<C-f>/<C-b>/gg/G etc.
-    scroll = { enabled = true },
-    -- Indent guides + animated scope highlight.
-    indent = { enabled = true },
-  }
-
-  -- File explorer (sidebar)
-  vim.keymap.set('n', '<leader>e', function() Snacks.explorer() end, { desc = '[E]xplorer' })
-
-  -- Kickstart-compatible <leader>s* pickers. These used to be Telescope.
-  vim.keymap.set('n', '<leader>sh', function() Snacks.picker.help() end, { desc = '[S]earch [H]elp' })
-  vim.keymap.set('n', '<leader>sk', function() Snacks.picker.keymaps() end, { desc = '[S]earch [K]eymaps' })
-  vim.keymap.set('n', '<leader>sf', function() Snacks.picker.files() end, { desc = '[S]earch [F]iles' })
-  vim.keymap.set('n', '<leader>ss', function() Snacks.picker.pickers() end, { desc = '[S]earch [S]elect Picker' })
-  vim.keymap.set({ 'n', 'x' }, '<leader>sw', function() Snacks.picker.grep_word() end, { desc = '[S]earch current [W]ord' })
-  vim.keymap.set('n', '<leader>sg', function() Snacks.picker.grep() end, { desc = '[S]earch by [G]rep' })
-  vim.keymap.set('n', '<leader>sd', function() Snacks.picker.diagnostics() end, { desc = '[S]earch [D]iagnostics' })
-  vim.keymap.set('n', '<leader>sr', function() Snacks.picker.resume() end, { desc = '[S]earch [R]esume' })
-  vim.keymap.set('n', '<leader>s.', function() Snacks.picker.recent() end, { desc = '[S]earch Recent Files ("." for repeat)' })
-  vim.keymap.set('n', '<leader>sc', function() Snacks.picker.commands() end, { desc = '[S]earch [C]ommands' })
-  vim.keymap.set('n', '<leader><leader>', function() Snacks.picker.buffers() end, { desc = '[ ] Find existing buffers' })
-  vim.keymap.set('n', '<leader>/', function() Snacks.picker.lines() end, { desc = '[/] Fuzzily search in current buffer' })
-  vim.keymap.set('n', '<leader>s/', function() Snacks.picker.grep_buffers() end, { desc = '[S]earch [/] in Open Files' })
-  vim.keymap.set(
-    'n',
-    '<leader>sn',
-    function() Snacks.picker.files { cwd = vim.fn.stdpath 'config', follow = true } end,
-    { desc = '[S]earch [N]eovim files' }
-  )
-
-  -- LazyVim-style <leader>f*. Note: <leader>f is also bound to format above,
-  -- so <leader>ff will wait briefly for the second key.
-  vim.keymap.set('n', '<leader>ff', function() Snacks.picker.files() end, { desc = '[F]ind [F]iles' })
-  vim.keymap.set('n', '<leader>fg', function() Snacks.picker.grep() end, { desc = '[F]ind by [G]rep' })
-  vim.keymap.set('n', '<leader>fr', function() Snacks.picker.recent() end, { desc = '[F]ind [R]ecent' })
-  vim.keymap.set('n', '<leader>fb', function() Snacks.picker.buffers() end, { desc = '[F]ind [B]uffers' })
-
-  -- LSP pickers. Set globally rather than on LspAttach: the picker itself
-  -- reports when no server is attached, and global maps survive the buffer.
-  vim.keymap.set('n', 'grr', function() Snacks.picker.lsp_references() end, { desc = '[G]oto [R]eferences' })
-  vim.keymap.set('n', 'gri', function() Snacks.picker.lsp_implementations() end, { desc = '[G]oto [I]mplementation' })
-  vim.keymap.set('n', 'grd', function() Snacks.picker.lsp_definitions() end, { desc = '[G]oto [D]efinition' })
-  vim.keymap.set('n', 'grt', function() Snacks.picker.lsp_type_definitions() end, { desc = '[G]oto [T]ype Definition' })
-  vim.keymap.set('n', 'gO', function() Snacks.picker.lsp_symbols() end, { desc = 'Open Document Symbols' })
-  vim.keymap.set('n', 'gW', function() Snacks.picker.lsp_workspace_symbols() end, { desc = 'Open Workspace Symbols' })
-
-  -- Lazygit in a floating terminal (requires the `lazygit` binary on PATH).
-  vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = '[G]it: Lazy[g]it' })
-end
+require('config.plugins.snacks').setup()
+require('features.search').setup()
+require('features.git').setup()
 
 -- [[ flash.nvim: fast on-screen jumps with labels ]]
 -- `s` + chars shows labels to jump anywhere on screen; also enhances f/t/F/T.
