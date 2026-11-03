@@ -1,0 +1,31 @@
+# Only keys in this file are managed. Other app settings remain writable.
+# Keep the complete theme so it is also valid when creating a new config.
+[desktop]
+appearanceTheme = "dark"
+
+[desktop.appearanceDarkChromeTheme]
+accent = "#3a83f7"
+accentSource = "chatgpt"
+contrast = 60
+ink = "#ffffff"
+opaqueWindows = false
+surface = "#181818"
+
+[desktop.appearanceDarkChromeTheme.fonts]
+code = '"UDEV Gothic 35NF"'
+ui = '"UDEV Gothic 35"'
+
+[desktop.appearanceDarkChromeTheme.fonts.codeFace]
+family = "UDEV Gothic 35NF"
+fullName = "UDEV Gothic 35NF Bold"
+postscriptName = "UDEVGothic35NF-Bold"
+
+[desktop.appearanceDarkChromeTheme.fonts.uiFace]
+family = "UDEV Gothic 35"
+fullName = "UDEV Gothic 35 Bold"
+postscriptName = "UDEVGothic35-Bold"
+
+[desktop.appearanceDarkChromeTheme.semanticColors]
+diffAdded = "#40c977"
+diffRemoved = "#fa423e"
+skill = "#ad7bf9"

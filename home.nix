@@ -1,4 +1,7 @@
-{ pkgs, username, ... }:
+{ config, lib, pkgs, username, ... }:
+let
+  mergeToml = pkgs.callPackage ./scripts/merge-toml.nix { };
+in
 {
   home.username = username;
   home.homeDirectory = "/Users/${username}";
@@ -9,7 +12,17 @@
 
   programs.home-manager.enable = true;
 
+  # Merge managed keys into the writable app config instead of linking it.
+  home.activation.mergeCodexConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run ${mergeToml}/bin/merge-toml \
+      ${./codex/config.toml} \
+      ${lib.escapeShellArg "${config.home.homeDirectory}/.codex/config.toml"}
+  '';
+
   home.packages = [
+    # NF includes the icon glyphs used by Neovim in the integrated terminal.
+    pkgs.udev-gothic
+    pkgs.udev-gothic-nf
     # Required by nvim-treesitter (main branch) to build parsers.
     pkgs.tree-sitter
     # Git TUI, opened from nvim via Snacks.lazygit().

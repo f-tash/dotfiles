@@ -8,6 +8,8 @@ Personal dotfiles managed with Nix home-manager (standalone, flakes-based).
 flake.nix              Flake inputs (nixpkgs, home-manager, herdr) and outputs.
 flake.lock             Locked input versions. Committed.
 home.nix               Home-manager config: packages + dotfile links.
+codex/config.toml      Managed ChatGPT/Codex app settings, merged on activation.
+scripts/merge-toml.nix Nix-based TOML merge, applied to a writable config file.
 nvim/init.lua          Neovim core config and feature wiring (kickstart.nvim base).
 nvim/lua/config/       Shared plugin setup (currently Snacks).
 nvim/lua/features/search/ Search keymaps and feature-local Snacks adapter.
@@ -40,6 +42,28 @@ This rebuilds the home-manager generation and refreshes symlinks under `~/`.
 `nvim/init.lua`, `nvim/lua/config/`, and `nvim/lua/features/` are linked into `~/.config/nvim/`.
 Only these sources are managed; `nvim-pack-lock.json`, plugin state, and other Lua modules stay writable.
 
+## ChatGPT / Codex app
+
+`codex/config.toml` contains the keys managed in `~/.codex/config.toml`.
+Home-manager activation (including `./apply.sh`) merges these keys into the
+existing file, or creates it if missing. The destination stays a regular writable
+file, not a Nix store symlink. Unmanaged keys are preserved. When values change,
+the TOML is regenerated, so comments and original formatting are not preserved.
+Removing a key from the repo stops managing it; it does not delete the live key.
+
+The managed settings currently include the dark appearance and its full theme,
+with `UDEVGothic35NF-Bold` for code and `UDEVGothic35-Bold` for the UI. The NF
+variant includes Nerd Fonts glyphs for Neovim file icons in the terminal.
+Complete theme fields are needed for the app to accept a newly created theme.
+`pkgs.udev-gothic` and `pkgs.udev-gothic-nf` in `home.packages` install both fonts.
+Keep credentials and machine-specific settings out of this file.
+
+The merge uses `builtins.fromTOML` and `lib.recursiveUpdate` at activation time.
+Nix emits JSON, and nixpkgs' `remarshal` converts it back to TOML. Live settings
+are kept out of the Nix store. Invalid TOML or a symlink destination fails without
+overwriting it. A semantically unchanged config is not rewritten, and
+home-manager dry runs skip the merge.
+
 ## Private overlay
 
 `flake.nix` conditionally includes `./private.nix` if the file exists:
@@ -60,6 +84,7 @@ Without `private.nix`, the public modules apply on their own — no error, no de
 Base is upstream `nvim-lua/kickstart.nvim`. Core options and remaining plugin setup stay in `init.lua`; shared Snacks setup lives in `lua/config/plugins/snacks.lua`. Search and Git behavior live in their own `lua/features/` directories, with adapters kept inside each feature. It uses Neovim 0.12's built-in `vim.pack` package manager — no lazy.nvim. Plugins are declared with `vim.pack.add` in their setup modules; Git-only dependencies live in `features/git/plugins.lua`.
 
 Customizations added on top of kickstart:
+- `vim.g.have_nerd_font = true` enables Nerd Fonts icons, including `mini.icons`.
 - **`snacks.nvim`** (folke/snacks.nvim) is the **only fuzzy finder** — Telescope was removed. `lua/config/plugins/snacks.lua` installs Snacks and configures its picker, explorer, scrolling, indent guides, and `vim.ui.select`. The explorer uses the centered floating `vertical` layout with preview hidden; it closes after opening a file or leaving the picker. SECTION 11 loads this shared setup before the search and Git features.
 - **Search feature** lives in `lua/features/search/`: `keymaps.lua` assigns keys, `adapters/snacks.lua` calls the plugin, and `init.lua` connects them. Each action opens one picker, so it needs no separate workflow layer. It includes the explorer (`<leader>e`), kickstart-compatible `<leader>s*` pickers, LazyVim-style `<leader>f*` aliases, and LSP `grr`/`gri`/`grd`/`grt`/`gO`/`gW` pickers (set globally, not on `LspAttach`).
 - **Test files are hidden from pickers** by default; `T` (or `<a-t>` while typing) toggles them. This filter and its picker-internal keys live in the shared Snacks setup, so they apply to both search and Git. files/grep/explorer use Snacks' native `exclude` globs; other sources are filtered per item with `transform`; `git_diff` is left alone so diff hunks survive. Note the globs are `*test*`/`*Test*`, so a name like `latest.lua` is also hidden.
