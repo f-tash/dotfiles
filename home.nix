@@ -20,6 +20,18 @@ in
   '';
 
   home.packages = [
+    # CLI tools and the commands initialized in shell/zshrc.
+    pkgs.eza
+    pkgs.bat
+    pkgs.fd
+    pkgs.ripgrep
+    pkgs.delta
+    pkgs.fzf
+    pkgs.zoxide
+    pkgs.starship
+    pkgs.gh
+    pkgs.uv
+    pkgs.gitleaks
     # NF includes the icon glyphs used by Neovim in the integrated terminal.
     pkgs.udev-gothic
     pkgs.udev-gothic-nf
